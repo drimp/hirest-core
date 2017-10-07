@@ -7,7 +7,7 @@
   },
   "autoload":{
     "files":[
-      "vendor/hirest/core/bootstrap.php"
+      "bootstrap.php"
     ],
     "psr-4":{
       "Hirest\\Core\\":"src"
