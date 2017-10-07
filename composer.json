@@ -5,8 +5,12 @@
     "php":">=5.6.0"
   },
   "autoload":{
+    "files":[
+      "bootstrap.php"
+    ],
     "psr-4":{
-      "Hirest\\Core\\":"src/"
+      "Hirest\\Core\\":"src"
     }
+
   }
 }

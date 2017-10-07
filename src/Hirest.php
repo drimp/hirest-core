@@ -12,7 +12,7 @@ class Hirest{
 
     /**
      * Singleton
-     * @return hirest
+     * @return Hirest
      */
     public static function getInstance() {
         if(!is_object(self::$instance)) {
@@ -31,7 +31,7 @@ class Hirest{
             $this->responseHandlerFunctions[] = $function;
             return $this;
         }
-        throw new Exception('Response handler "'.$function.'" is not a function');
+        throw new \Exception('Response handler "'.$function.'" is not a function');
     }
 
     /**
@@ -53,14 +53,14 @@ class Hirest{
     /** add a middleware before action
      * @param $function callable
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     public function addMiddleware($function){
         if(is_callable($function)){
             $this->middlewareFunctions[] = $function;
             return $this;
         }
-        throw new Exception('Middleware "'.$function.'" is not a function');
+        throw new \Exception('Middleware "'.$function.'" is not a function');
     }
 
     public function middlewareHandle(){
@@ -83,19 +83,13 @@ class Hirest{
      * @param $regex
      * @param $action
      * @param $allowed_methods
-     * @throws Exception
-     * @return $this
+     * @throws \Exception
+     * @return Route
      */
-    public function route($regex, $action, $allowed_methods = null ){
-        if(is_callable($action)){
-            $this->routes[] = array(
-                'regex' => $regex,
-                'action' => $action,
-                'allowed_methods' => $allowed_methods
-            );
-            return $this;
-        }
-        throw new Exception('Action "'.$action.'" is not callable');
+    public function route($regex = null, $action = null){
+    	$route = new Route($regex, $action);
+    	$this->routes[] = $route;
+        return $route;
     }
 
     /**
@@ -115,12 +109,12 @@ class Hirest{
 
         $uri = $uri[0];
         $route_founded = false;
-        foreach($this->routes AS $action){
-            if(preg_match('~^/?'.$action['regex'].'[/]?$~iu',$uri,$params)){
-                if($action['allowed_methods'] !== null
+        foreach($this->routes AS $route){
+            if(preg_match('~^/?'.$route->regex.'[/]?$~iu',$uri,$params)){
+                if($route->allowed_methods !== null
                     && (
                         !isset($_SERVER['REQUEST_METHOD'])
-                        || !in_array($_SERVER['REQUEST_METHOD'],$action['allowed_methods'])
+                        || !in_array($_SERVER['REQUEST_METHOD'],$route->allowed_methods)
                     )){
                     continue;
                 }
@@ -132,7 +126,7 @@ class Hirest{
                 }
                 $this->request = [
                     'URI'    => $uri,
-                    'route'  => $action
+                    'route'  => $route
                 ];
                 break;
             }
@@ -143,10 +137,11 @@ class Hirest{
         }
 
         if($this->middlewareHandle()){
-            if(is_array($action['action'])){
-                $action['action'][0] = new $action['action'][0];
+        	$action = $route->action;
+            if(is_array($action)){
+                $action[0] = new $action[0];
             }
-            $response = call_user_func_array($action['action'],$params);
+            $response = call_user_func_array($action,$params);
             echo $this->responseHandle($response);
         }
 
