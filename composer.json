@@ -2,11 +2,12 @@
   "name":"hirest/core",
   "version":"1.0.1",
   "require":{
-    "php":">=5.6.0"
+    "php":">=5.6.0",
+    "vlucas/phpdotenv": "^2.4"
   },
   "autoload":{
     "files":[
-      "bootstrap.php"
+      "vendor/hirest/core/bootstrap.php"
     ],
     "psr-4":{
       "Hirest\\Core\\":"src"

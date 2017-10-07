@@ -1,8 +1,6 @@
 <?php
 
-
 define('APP_PATH', __DIR__.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR);
-
 
 
 /**
