@@ -1,12 +1,9 @@
 <?php
 
-define('APP_PATH', __DIR__.DIRECTORY_SEPARATOR.'app'.DIRECTORY_SEPARATOR);
 
-
-/**
- * Return Hirest instance
- * @return \Hirest\Core\Hirest
- */
-function hirest(){
-	return \Hirest\Core\Hirest::getInstance();
+if (file_exists(ROOT_PATH . '.env')) {
+	$dotenv = new Dotenv\Dotenv(ROOT_PATH);
+	$dotenv->load();
 }
+
+
