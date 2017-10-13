@@ -96,7 +96,6 @@ class Hirest {
 	 * @param $regex
 	 * @param $action
 	 * @param $allowed_methods
-	 * @throws \Exception
 	 * @return Route
 	 */
 	public function route($regex = null, $action = null) {

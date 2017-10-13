@@ -55,3 +55,15 @@ if (!function_exists('env')) {
 		return $var;
 	}
 }
+
+if (!function_exists('view')) {
+	function view($view_name, $data = null){
+		return new \Hirest\Core\View($view_name, $data);
+	}
+}
+
+if (!function_exists('content')) {
+	function content(){
+		return \Hirest\Core\View::$content_variable;
+	}
+}
