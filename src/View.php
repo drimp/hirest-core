@@ -6,10 +6,12 @@ class View{
 	public static $view_path;
 	public static $layout;
 	public static $content_variable = 'content';
+	protected static $scripts = '';
 
 	protected $view_name;
 	protected $data;
 	protected $rendered;
+
 
 	public function __construct($view_name, $data = null) {
 
@@ -33,6 +35,9 @@ class View{
 		if(static::$layout){
 			include $this->getLayoutPath();
 			$this->rendered = ob_get_clean();
+		}
+		if(!empty(static::$scripts)){
+			$this->rendered = preg_replace('~@scripts~u', static::$scripts, $this->rendered);
 		}
 		return $this->rendered;
 	}
@@ -66,9 +71,18 @@ class View{
 			.$view_name
 			.'.php';
 
-		return ob_get_clean();
+		return static::parseScripts(ob_get_clean());
 	}
 
+
+	protected function parseScripts($html){
+		preg_match_all('~@script(.*)@endscript~Uis', $html, $scripts);
+		if(count($scripts)){
+			static::$scripts .= implode(PHP_EOL, $scripts[1]);
+		}
+
+		return preg_replace('~@script(.*)@endscript~Uis', '', $html);
+	}
 
 
 }

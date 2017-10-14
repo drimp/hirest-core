@@ -76,6 +76,10 @@ class Route {
 		return $this;
 	}
 
+	public function name($name){
+
+	}
+
 
 	/**
 	 * Shorthand method return a Route with allowed method GET
