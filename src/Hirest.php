@@ -3,6 +3,7 @@
 namespace Hirest\Core;
 
 
+
 class Hirest {
 
 	public         $routes                   = array();
@@ -11,6 +12,9 @@ class Hirest {
 	private        $responseHandlerFunctions = [];
 	private        $middlewareFunctions      = [];
 	private        $currentRouteGroup        = null;
+	private static $rootDir					 = null;
+	private static $appDir					 = null;
+	private static $rewriteEnabled   		 = true;
 
 	/**
 	 * Singleton
@@ -148,20 +152,142 @@ class Hirest {
 
 
 	/**
+	 * return root directory path
+	 * @return null
+	 */
+	public static function getRootDir(){
+		if(static::$rootDir === null){
+			return getcwd().DIRECTORY_SEPARATOR;
+		}
+		return static::$rootDir;
+	}
+
+	/**
+	 * return application directory path
+	 * @return null
+	 */
+	public static function getAppDir(){
+		if(static::$appDir === null){
+			return static::getRootDir();
+		}
+		return static::$appDir;
+	}
+
+
+	/**
+	 * Return is URI rewrite enabled
+	 * @return bool
+	 */
+	public static function isRewriteEnabled(){
+		return static::$rewriteEnabled;
+	}
+
+
+	/**
+	 * Applying run settings to Hirest environment
+	 * @param $settings
+	 * @return bool
+	 * @throws \Exception
+	 */
+	private function applyRunSettings($settings){
+		if(empty($settings)){
+			return true;
+		}
+
+		//TODO: make this via iteration method
+
+		// Set root directory
+		if(isset($settings['root_dir'])){
+			if(is_dir($settings['root_dir'])){
+				static::$rootDir = $settings['root_dir'];
+			}else{
+				throw new \Exception('Root directory set in the run config is not exists: '.$settings['root_dir']);
+			}
+		}
+
+		// Set application directory
+		if(isset($settings['app_dir'])){
+			if(is_dir($settings['app_dir'])){
+				static::$appDir = $settings['app_dir'];
+			}else{
+				throw new \Exception('Application directory set in the run config is not exists: '.$settings['app_dir']);
+			}
+		}
+
+		// Set views directory
+		if(isset($settings['views_dir'])){
+			if(is_dir($settings['views_dir'])){
+				View::$view_path = $settings['views_dir'];
+			}else{
+				throw new \Exception('Views directory set in the run config is not exists: '.$settings['views_dir']);
+			}
+		}
+
+		// Set views layout file
+		if(isset($settings['views_layout'])){
+			View::$layout = $settings['views_layout'];
+		}
+
+		// Enable/disable route rewrites
+		if(isset($settings['rewrite_enabled'])){
+			static::$rewriteEnabled = (bool) $settings['rewrite_enabled'];
+		}
+
+		// Preset routes
+		if(isset($settings['routes'])){
+			foreach ($settings['routes'] AS $regex => $action){
+				$this->route($regex,$action);
+			}
+		}
+
+		// Set Hiorm connection
+		if(isset($settings['pdo_connection'])){
+			if(class_exists('Hirest\Hiorm\Model')){
+				\Hirest\Hiorm\Model::$connection = $settings['pdo_connection'];
+
+				// If connection set debug can be enabled
+				if(isset($settings['pdo_debug'])){
+					\Hirest\Hiorm\Model::$debug_errors = (bool) $settings['pdo_debug'];
+				}
+			}else{
+				throw new \Exception('Hirest ORM is not found. Please install hirest/hiorm package');
+			}
+		}
+
+
+		return true;
+	}
+
+
+	/**
+	 * Enable PHP session
+	 * @return bool
+	 */
+	private static function checkSessionStarted(){
+		if (session_status() == PHP_SESSION_NONE) {
+			session_start();
+		}
+		return true;
+	}
+
+
+
+
+	/**
 	 * parse URI and handle it
 	 *
 	 * @return response
 	 */
-	public function run() {
+	public function run( $settings = [] ) {
 
-		if (isset($_SERVER['REQUEST_URI'])) {
-			$request_uri = $_SERVER['REQUEST_URI'];
-		} elseif (isset($_SERVER['argv'][1])) {
-			$request_uri = $_SERVER['argv'][1];
-		} else {
-			exit('invalid request');
-		}
-		preg_match('~^([^\?]+)~ui', $request_uri, $uri);
+		self::checkSessionStarted();
+
+		// Apply settings
+		$this->applyRunSettings($settings);
+
+		$request_uri = Request::getUri();
+
+		preg_match('~^([^\?&]+)~ui', $request_uri, $uri);
 
 		$uri           = $uri[0];
 		$route_founded = false;

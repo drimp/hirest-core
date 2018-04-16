@@ -19,7 +19,6 @@ class View{
 		$this->data = $data;
 
 		if(!file_exists($this->getViewPath())){
-			dd($this->getViewPath());
 			throw new \Exception('View '. $view_name .' not found');
 		}
 	}
@@ -30,13 +29,15 @@ class View{
 		}
 		ob_start();
 		include $this->getViewPath();
-		$this->rendered = ${static::$content_variable} = ob_get_clean();
+		$this->rendered = ${static::$content_variable} = static::parseScripts(ob_get_clean());
 
 		if(static::$layout){
+			ob_start();
 			include $this->getLayoutPath();
 			$this->rendered = ob_get_clean();
 		}
-		if(!empty(static::$scripts)){
+
+		if(preg_match('~@scripts~u', $this->rendered)){
 			$this->rendered = preg_replace('~@scripts~u', static::$scripts, $this->rendered);
 		}
 		return $this->rendered;
@@ -44,14 +45,12 @@ class View{
 
 	public function getLayoutPath(){
 		return static::$view_path
-			.DIRECTORY_SEPARATOR
 			.static::$layout
 			.'.php';
 	}
 
 	public function getViewPath(){
 		return static::$view_path
-			.DIRECTORY_SEPARATOR
 			.$this->view_name
 			.'.php';
 	}
@@ -67,7 +66,6 @@ class View{
 		ob_start();
 
 		include static::$view_path
-			.DIRECTORY_SEPARATOR
 			.$view_name
 			.'.php';
 

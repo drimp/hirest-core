@@ -45,6 +45,24 @@ if (!function_exists('e')) {
 
 }
 
+if (!function_exists('href')) {
+	/**
+	 * Generate href from uri depended of rewrite rules
+	 *
+	 * @param string $value
+	 * @return string
+	 */
+	function href($value) {
+		$value = e($value);
+		if(!\Hirest\Core\Hirest::isRewriteEnabled()){
+			$value = str_replace('?','&', $value);
+			return '?'.$value;
+		}
+		return $value;
+	}
+
+}
+
 
 if (!function_exists('env')) {
 	function env($varname, $default = false){
